@@ -1,0 +1,10 @@
+header:
+  version: 8
+
+# filepath: /home/sandeshghimire/workspace/soc/mcp/repos/meta-virtualization.yml
+repos:
+  meta-virtualization:
+    url: https://github.com/Xilinx/meta-virtualization
+    branch: rel-v2024.2
+    path: sources/meta-virtualization
+    

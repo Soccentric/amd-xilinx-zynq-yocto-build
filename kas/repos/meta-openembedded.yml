@@ -1,0 +1,24 @@
+header:
+  version: 8
+
+repos:
+  meta-openembedded:
+    url: https://github.com/Xilinx/meta-openembedded
+    branch: rel-v2024.2
+    path: sources/meta-openembedded
+    layers:
+      meta-python:
+      meta-networking:
+      meta-filesystems:
+      meta-filesystems :
+      meta-gnome :
+      meta-initramfs:
+      meta-multimedia :
+      meta-networking :
+      meta-oe :
+      meta-perl :
+      meta-python :
+      meta-webserver :
+      meta-xfce :
+
+      

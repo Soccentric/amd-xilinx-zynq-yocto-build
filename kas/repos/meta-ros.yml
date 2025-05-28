@@ -1,0 +1,14 @@
+header:
+  version: 8
+
+# filepath: /home/sandeshghimire/workspace/soc/mcp/repos/meta-ros.yml
+repos:
+  meta-ros:
+    url: https://github.com/Xilinx/meta-ros
+    branch: rel-v2024.2
+    path: sources/meta-ros
+    layers:
+      meta-ros-common:
+      meta-ros2:
+      meta-ros2-humble:
+    

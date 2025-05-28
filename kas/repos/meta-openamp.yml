@@ -1,0 +1,10 @@
+header:
+  version: 8
+
+# filepath: /home/sandeshghimire/workspace/soc/mcp/repos/meta-openamp.yml
+repos:
+  meta-openamp:
+    url: https://github.com/Xilinx/meta-openamp
+    branch: rel-v2024.2
+    path: sources/meta-openamp
+    

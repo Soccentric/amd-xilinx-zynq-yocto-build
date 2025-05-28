@@ -1,0 +1,25 @@
+header:
+  version: 8
+
+# filepath: /home/sandeshghimire/workspace/soc/mcp/repos/meta-xilinx.yml
+repos:
+  meta-xilinx:
+    url: https://github.com/Xilinx/meta-xilinx
+    branch: rel-v2024.2
+    path: sources/meta-xilinx
+    layers:
+      meta-microblaze:
+      meta-vitis-tc:
+      meta-xilinx-bsp:
+      meta-xilinx-contrib:
+      meta-xilinx-core:
+      meta-xilinx-demos:
+      meta-xilinx-mali400:
+      meta-xilinx-multimedia:
+      meta-xilinx-standalone:
+      meta-xilinx-standalone-experimental:
+      meta-xilinx-standalone-sdt:
+      meta-xilinx-vendor:
+    
+
+    

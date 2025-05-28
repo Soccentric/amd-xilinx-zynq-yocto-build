@@ -1,0 +1,10 @@
+header:
+  version: 8
+
+# filepath: /home/sandeshghimire/workspace/soc/mcp/repos/meta-aws.yml
+repos:
+  meta-aws:
+    url: https://github.com/Xilinx/meta-aws
+    branch: rel-v2024.2
+    path: sources/meta-aws
+    

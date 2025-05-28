@@ -1,0 +1,27 @@
+header:
+  version: 8
+  includes:
+    - meta-aws.yml
+    - meta-kria.yml
+    - meta-openembedded.yml
+    - meta-rauc.yml
+    - meta-system-controller.yml
+    - meta-xilinx-tools.yml
+    - poky.yml
+    - meta-amd-adaptive-socs.yml
+    - meta-embedded-plus.yml
+    - meta-mingw.yml
+    - meta-petalinux.yml
+    - meta-ros.yml
+    - meta-virtualization.yml
+    - meta-xilinx-tsn.yml
+    - meta-arm.yml
+    - meta-jupyter.yml
+    - meta-openamp.yml
+    - meta-qt5.yml
+    - meta-security.yml
+    - meta-vitis.yml
+    - meta-xilinx.yml
+
+
+

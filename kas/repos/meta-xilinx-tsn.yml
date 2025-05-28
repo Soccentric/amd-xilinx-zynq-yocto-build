@@ -1,0 +1,10 @@
+header:
+  version: 8
+
+# filepath: /home/sandeshghimire/workspace/soc/mcp/repos/meta-xilinx-tsn.yml
+repos:
+  meta-xilinx-tsn:
+    url: https://github.com/Xilinx/meta-xilinx-tsn
+    branch: rel-v2024.2
+    path: sources/meta-xilinx-tsn
+    
