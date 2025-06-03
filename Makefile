@@ -18,6 +18,8 @@ KAS_IMAGE ?= core-image-base
 # Docker configuration
 DOCKER_WORKDIR ?= /work
 DOCKER_USER ?= $(shell id -u):$(shell id -g)
+DOCKER_IMAGE_PRIMARY ?= ghcr.io/siemens/kas:3.2
+DOCKER_IMAGE_FALLBACK ?= kasproject/kas:3.2
 
 # Determine which Docker image to use
 DOCKER_IMAGE := $(shell if docker image inspect $(DOCKER_IMAGE_PRIMARY) >/dev/null 2>&1; then echo $(DOCKER_IMAGE_PRIMARY); elif docker image inspect $(DOCKER_IMAGE_FALLBACK) >/dev/null 2>&1; then echo $(DOCKER_IMAGE_FALLBACK); else echo $(DOCKER_IMAGE_PRIMARY); fi)
@@ -39,7 +41,7 @@ CP := cp -v
 DATE := $(shell date +%Y-%m-%d_%H-%M-%S)
 ARTIFACTS_DIR := artifacts/$(DATE)
 
-.PHONY: all build menu shell clean help status list-images flash info sdk esdk copy-artifacts cleanall cleansstate cleandownloads cleanmachine clean-artifacts build-with-progress docker-build generate-kas-config
+.PHONY: all build menu shell clean help status list-images flash info sdk esdk copy-artifacts cleanall cleansstate cleandownloads cleanmachine clean-artifacts build-with-progress docker-build generate-kas-config show-machines show-distros show-images
 
 # Export variables so that included kas files can access them
 export KAS_MACHINE KAS_DISTRO KAS_IMAGE KAS_REPOS_FILE KAS_LOCAL_CONF_FILE KAS_BBLAYERS_FILE
@@ -79,6 +81,7 @@ check-docker-image:
 # Generate dynamic KAS file with environment variables substituted
 generate-kas-config:
 	@echo "Generating dynamic KAS configuration..."
+	@$(MKDIR) kas
 	@echo "header:" > kas/kas-dynamic.yml
 	@echo "  version: 8" >> kas/kas-dynamic.yml
 	@echo "  includes:" >> kas/kas-dynamic.yml
@@ -91,34 +94,44 @@ generate-kas-config:
 	@echo "target:" >> kas/kas-dynamic.yml
 	@echo "  - $(KAS_IMAGE)" >> kas/kas-dynamic.yml
 
+# Clean up generated kas configuration
+clean-kas-config:
+	@$(RM) -f kas/kas-dynamic.yml
+
 # Build the image defined in the KAS_FILE always using Docker
 build: check-docker-image generate-kas-config
 	@echo "Starting Docker build using $(DOCKER_IMAGE)..."
 	$(KAS_CMD) build kas/kas-dynamic.yml
 	@$(MAKE) copy-artifacts
+	@$(MAKE) clean-kas-config
 
 # Build the SDK for the specified image (using Docker)
 sdk: check-docker-image generate-kas-config
 	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c populate_sdk $(KAS_IMAGE)"
 	@$(MAKE) copy-artifacts SDK=1
+	@$(MAKE) clean-kas-config
 
 # Build the extensible SDK for the specified image
 esdk: check-docker-image generate-kas-config
 	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c populate_sdk_ext $(KAS_IMAGE)"
 	@$(MAKE) copy-artifacts ESDK=1
+	@$(MAKE) clean-kas-config
 
 # Launch the bitbake terminal UI for the configuration in KAS_FILE
 menu: check-docker-image generate-kas-config
 	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -u ncurses $(KAS_IMAGE)"
+	@$(MAKE) clean-kas-config
 
 # Enter the KAS shell environment for the configuration in KAS_FILE
 shell: check-docker-image generate-kas-config
 	$(KAS_CMD) shell kas/kas-dynamic.yml
+	@$(MAKE) clean-kas-config
 
 # Clean the build output using bitbake
 clean: check-docker-image generate-kas-config
 	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c clean $(KAS_IMAGE)"
 	@echo "Basic clean completed for $(KAS_IMAGE)"
+	@$(MAKE) clean-kas-config
 
 # Clean all build output including tmp directory
 cleanall: check-docker-image generate-kas-config
@@ -131,8 +144,8 @@ cleansstate: check-docker-image generate-kas-config
 	@echo "Sstate cache cleaned for $(KAS_IMAGE)"
 
 # Clean the downloads directory
-cleandownloads: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "rm -rf downloads"
+cleandownloads: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "rm -rf downloads"
 	@echo "Downloads directory cleaned"
 
 # Clean only specific machine output
@@ -153,6 +166,18 @@ status:
 	else \
 		echo "  No images built for $(KAS_MACHINE)"; \
 	fi
+
+# Show available machines
+show-machines: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake-layers show-machines"
+
+# Show available distros
+show-distros: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake-layers show-distros"
+
+# Show available image recipes
+show-images: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake-layers show-recipes \"*image*\""
 
 # List built images
 list-images:
@@ -245,10 +270,12 @@ info:
 	@echo "  Build host: $$(hostname)"
 	@echo ""
 	@echo "Configuration:"
-	@echo "  KAS_FILE: $(KAS_FILE)"
 	@echo "  KAS_MACHINE: $(KAS_MACHINE)"
 	@echo "  KAS_DISTRO: $(KAS_DISTRO)"
 	@echo "  KAS_IMAGE: $(KAS_IMAGE)"
+	@echo "  KAS_REPOS_FILE: $(KAS_REPOS_FILE)"
+	@echo "  KAS_LOCAL_CONF_FILE: $(KAS_LOCAL_CONF_FILE)"
+	@echo "  KAS_BBLAYERS_FILE: $(KAS_BBLAYERS_FILE)"
 	@echo ""
 	@echo "Artifacts:"
 	@if [ -d "artifacts" ]; then \
@@ -278,35 +305,25 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all            Default target, builds the image using Docker."
-	@echo "  build          Build the image defined in the KAS_FILE using Docker and copy to artifacts."
-	@echo "  build-with-progress Build with progress display every minute using Docker."
-	@echo "  sdk            Build the SDK for the specified image and copy to artifacts."
-	@echo "  esdk           Build the extensible SDK (eSDK) for the specified image and copy to artifacts."
-	@echo "  copy-artifacts Copy built images/SDKs to date-stamped artifacts directory (use COMPRESS=1 to compress)."
-	@echo "  clean-artifacts Clean old artifact directories (specify KEEP=N to keep N most recent directories)."
-	@echo "  menu           Launch the BitBake ncurses (terminal) UI for interactive build."
-	@echo "  shell          Enter the KAS shell environment for the configuration in KAS_FILE."
-	@echo "  clean          Clean build output for the specified image using BitBake."
-	@echo "  cleanall       Clean the entire tmp directory for a complete rebuild."
-	@echo "  cleansstate    Clean the shared state cache for the specified image."
+	@echo "  all            Default target, shows this help message."
+	@echo "  build          Build the image and copy to artifacts."
+	@echo "  build-with-progress Build with progress display"
+	@echo "  menu           Launch the bitbake menuconfig."
+	@echo "  shell          Enter the KAS shell environment."
+	@echo "  clean          Clean the build output."
+	@echo "  cleanall       Clean all build output and temporary files."
+	@echo "  cleansstate    Clean the shared state cache."
 	@echo "  cleandownloads Clean the downloads directory."
 	@echo "  cleanmachine   Clean only specific machine output."
-	@echo "  status         Show the current build status and configuration."
-	@echo "  list-images    List all built images."
-	@echo "  flash          Flash an image to an SD card (DEVICE and IMAGE parameters required)."
-	@echo "  info           Show build environment information."
-	@echo "  help           Display this help message."
-	@echo ""
-	@echo "Configuration Variables:"
-	@echo "  KAS_FILE             Path to the KAS configuration file (default: $(KAS_FILE))"
-	@echo "  KAS_MACHINE          Target machine (default: $(KAS_MACHINE))"
-	@echo "  KAS_DISTRO           Target distribution (default: $(KAS_DISTRO))"
-	@echo "  KAS_IMAGE            Target image type (default: $(KAS_IMAGE))"
-	@echo "  KAS_REPOS_FILE       Repository definitions file (default: $(KAS_REPOS_FILE))"
-	@echo "  KAS_LOCAL_CONF_FILE  Local configuration file (default: $(KAS_LOCAL_CONF_FILE))"
-	@echo "  KAS_BBLAYERS_FILE    BitBake layers file (default: $(KAS_BBLAYERS_FILE))"
-	@echo "  DOCKER_IMAGE         Docker image to use (default: $(DOCKER_IMAGE))"
-	@echo "  DOCKER_WORKDIR       Working directory in Docker container (default: $(DOCKER_WORKDIR))"
-
-.DEFAULT_GOAL := all
+	@echo "  copy-artifacts Copy built artifacts to dated directory."
+	@echo "  clean-artifacts Clean up old artifacts."
+	@echo "  info           Show detailed build information."
+	@echo "  status         Show current build status."
+	@echo "  show-machines  Show available machines."
+	@echo "  show-distros   Show available distros."
+	@echo "  show-images    Show available image recipes."
+	@echo "  flash          Flash an image to an SD card."
+	@echo "  sdk            Build the SDK for the specified image."
+	@echo "  esdk           Build the extensible SDK for the specified image."
+	@echo "  docker-build   Low-level docker build command."
+	@echo "  generate-kas-config Generate dynamic KAS configuration file."

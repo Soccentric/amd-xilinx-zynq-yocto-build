@@ -9,7 +9,9 @@ local_conf_header:
     USER_CLASSES = "buildstats"
     PATCHRESOLVE = "noop"
     PRECOMPILED_DTB_FILES_DIR = "${TOPDIR}/../precompiled-dtb-files"
-
+    DISTRO_FEATURES:append = " rauc virtualization libmali"
+    XILINX_WITH_ESW = "1"
+    INSANE_SKIP:pn-sick-scan-xd = "license-format"
     # Top level download and sstate cache directories
     DL_DIR = "${TOPDIR}/../downloads"
     SSTATE_DIR = "${TOPDIR}/../sstate-cache"
