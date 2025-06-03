@@ -8,6 +8,7 @@ local_conf_header:
     SDKMACHINE = "x86_64"
     USER_CLASSES = "buildstats"
     PATCHRESOLVE = "noop"
+    PRECOMPILED_DTB_FILES_DIR = "${TOPDIR}/../precompiled-dtb-files"
 
     # Top level download and sstate cache directories
     DL_DIR = "${TOPDIR}/../downloads"
@@ -17,6 +18,7 @@ local_conf_header:
     IMAGE_INSTALL:append = " strace "
     DISTRO_FEATURES:append = " debug-tweaks"
     LICENSE_FLAGS_ACCEPTED = "xilinx"
+    DISTRO_FEATURES:remove = "device-tree-precompiled"
   diskmon: |
     BB_DISKMON_DIRS = "\
         STOPTASKS,${TMPDIR},1G,100K \

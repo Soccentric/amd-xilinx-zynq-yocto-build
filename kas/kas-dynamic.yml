@@ -1,0 +1,11 @@
+header:
+  version: 8
+  includes:
+    - repos/common.yml
+    - conf/local.yml
+    - conf/bblayers.yml
+
+machine: kria-zynqmp-generic
+distro: poky
+target:
+  - core-image-full-cmdline

@@ -4,18 +4,18 @@ SHELL := /bin/bash
 # Load configuration variables from .env file
 -include .env
 
-# Configuration variables with defaults if not in .env
-KAS_FILE ?= kas/kas-poky-jetson.yml
-KAS_MACHINE = raspberrypi5
+# Configuration variables - these will be set from .env file
+# Only provide fallbacks if absolutely necessary
+KAS_REPOS_FILE ?= common
+KAS_LOCAL_CONF_FILE ?= local
+KAS_BBLAYERS_FILE ?= bblayers
+
+# Set default KAS configuration values
+KAS_MACHINE ?= kria-zynqmp-generic
 KAS_DISTRO ?= poky
 KAS_IMAGE ?= core-image-base
-KAS_REPOS_FILE ?= common.yml
-KAS_LOCAL_CONF_FILE ?= local.yml
-KAS_BBLAYERS_FILE ?= bblayers.yml
 
 # Docker configuration
-DOCKER_IMAGE_PRIMARY ?= image_zynq
-DOCKER_IMAGE_FALLBACK ?= image-zynq
 DOCKER_WORKDIR ?= /work
 DOCKER_USER ?= $(shell id -u):$(shell id -g)
 
@@ -29,6 +29,9 @@ KAS_CMD := docker run --rm -it \
 	-v /etc/localtime:/etc/localtime:ro \
 	--user $(DOCKER_USER) \
 	--workdir $(DOCKER_WORKDIR) \
+	-e KAS_REPOS_FILE=$(KAS_REPOS_FILE) \
+	-e KAS_LOCAL_CONF_FILE=$(KAS_LOCAL_CONF_FILE) \
+	-e KAS_BBLAYERS_FILE=$(KAS_BBLAYERS_FILE) \
 	$(DOCKER_IMAGE) kas
 RM := rm
 MKDIR := mkdir -p
@@ -36,7 +39,7 @@ CP := cp -v
 DATE := $(shell date +%Y-%m-%d_%H-%M-%S)
 ARTIFACTS_DIR := artifacts/$(DATE)
 
-.PHONY: all build menu shell clean help status list-images flash info sdk esdk copy-artifacts cleanall cleansstate cleandownloads cleanmachine clean-artifacts build-with-progress docker-build
+.PHONY: all build menu shell clean help status list-images flash info sdk esdk copy-artifacts cleanall cleansstate cleandownloads cleanmachine clean-artifacts build-with-progress docker-build generate-kas-config
 
 # Export variables so that included kas files can access them
 export KAS_MACHINE KAS_DISTRO KAS_IMAGE KAS_REPOS_FILE KAS_LOCAL_CONF_FILE KAS_BBLAYERS_FILE
@@ -73,43 +76,58 @@ check-docker-image:
 		echo "Using $(DOCKER_IMAGE) as Docker image."; \
 	fi
 
+# Generate dynamic KAS file with environment variables substituted
+generate-kas-config:
+	@echo "Generating dynamic KAS configuration..."
+	@echo "header:" > kas/kas-dynamic.yml
+	@echo "  version: 8" >> kas/kas-dynamic.yml
+	@echo "  includes:" >> kas/kas-dynamic.yml
+	@echo "    - repos/$(KAS_REPOS_FILE)" >> kas/kas-dynamic.yml
+	@echo "    - conf/$(KAS_LOCAL_CONF_FILE)" >> kas/kas-dynamic.yml
+	@echo "    - conf/$(KAS_BBLAYERS_FILE)" >> kas/kas-dynamic.yml
+	@echo "" >> kas/kas-dynamic.yml
+	@echo "machine: $(KAS_MACHINE)" >> kas/kas-dynamic.yml
+	@echo "distro: $(KAS_DISTRO)" >> kas/kas-dynamic.yml
+	@echo "target:" >> kas/kas-dynamic.yml
+	@echo "  - $(KAS_IMAGE)" >> kas/kas-dynamic.yml
+
 # Build the image defined in the KAS_FILE always using Docker
-build: check-docker-image
+build: check-docker-image generate-kas-config
 	@echo "Starting Docker build using $(DOCKER_IMAGE)..."
-	$(KAS_CMD) build $(KAS_FILE)
+	$(KAS_CMD) build kas/kas-dynamic.yml
 	@$(MAKE) copy-artifacts
 
 # Build the SDK for the specified image (using Docker)
-sdk: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "bitbake -c populate_sdk $(KAS_IMAGE)"
+sdk: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c populate_sdk $(KAS_IMAGE)"
 	@$(MAKE) copy-artifacts SDK=1
 
 # Build the extensible SDK for the specified image
-esdk: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "bitbake -c populate_sdk_ext $(KAS_IMAGE)"
+esdk: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c populate_sdk_ext $(KAS_IMAGE)"
 	@$(MAKE) copy-artifacts ESDK=1
 
 # Launch the bitbake terminal UI for the configuration in KAS_FILE
-menu: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "bitbake -u ncurses $(KAS_IMAGE)"
+menu: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -u ncurses $(KAS_IMAGE)"
 
 # Enter the KAS shell environment for the configuration in KAS_FILE
-shell: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE)
+shell: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml
 
 # Clean the build output using bitbake
-clean: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "bitbake -c clean $(KAS_IMAGE)"
+clean: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c clean $(KAS_IMAGE)"
 	@echo "Basic clean completed for $(KAS_IMAGE)"
 
 # Clean all build output including tmp directory
-cleanall: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "rm -rf tmp"
+cleanall: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "rm -rf tmp"
 	@echo "Complete build directory cleaned"
 
 # Clean the shared state cache
-cleansstate: check-docker-image
-	$(KAS_CMD) shell $(KAS_FILE) -c "bitbake -c cleansstate $(KAS_IMAGE)"
+cleansstate: check-docker-image generate-kas-config
+	$(KAS_CMD) shell kas/kas-dynamic.yml -c "bitbake -c cleansstate $(KAS_IMAGE)"
 	@echo "Sstate cache cleaned for $(KAS_IMAGE)"
 
 # Clean the downloads directory

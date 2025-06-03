@@ -3,6 +3,6 @@ header:
 repos:
   meta-swupdate:
     url: https://github.com/kraj/meta-clang.git
-    path: layers/meta-clang
+    path: sources/meta-clang
     branch: master
 
