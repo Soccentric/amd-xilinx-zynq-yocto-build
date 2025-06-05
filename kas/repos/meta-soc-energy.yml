@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-energy:
+    url: https://github.com/soccentric/meta-soc-energy.git
+    path: sources/meta-soc-energy
+    branch: main

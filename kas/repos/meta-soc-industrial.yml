@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-industrial:
+    url: https://github.com/soccentric/meta-soc-industrial.git
+    path: sources/meta-soc-industrial
+    branch: main

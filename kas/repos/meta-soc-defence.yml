@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-defence:
+    url: https://github.com/soccentric/meta-soc-defence.git
+    path: sources/meta-soc-defence
+    branch: main

@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-uav-drone:
+    url: https://github.com/soccentric/meta-soc-uav-drone.git
+    path: sources/meta-soc-uav-drone
+    branch: main

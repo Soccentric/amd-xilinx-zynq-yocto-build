@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-security:
+    url: https://github.com/soccentric/meta-soc-security.git
+    path: sources/meta-soc-security
+    branch: main

@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-ros:
+    url: https://github.com/soccentric/meta-soc-ros.git
+    path: sources/meta-soc-ros
+    branch: main

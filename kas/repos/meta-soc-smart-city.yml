@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-smart-city:
+    url: https://github.com/soccentric/meta-soc-smart-city.git
+    path: sources/meta-soc-smart-city
+    branch: main

@@ -22,6 +22,27 @@ header:
     - meta-security.yml
     - meta-vitis.yml
     - meta-xilinx.yml
+    - meta-soc-aerospace.yml
+    - meta-soc-agriculture.yml
+    - meta-soc-automotive.yml
+    - meta-soc-defence.yml
+    - meta-soc-edge-ai.yml
+    - meta-soc-energy.yml
+    - meta-soc-fintech.yml
+    - meta-soc-gaming.yml
+    - meta-soc-industrial.yml
+    - meta-soc-iot.yml
+    - meta-soc-marine.yml
+    - meta-soc-medical.yml
+    - meta-soc-mining.yml
+    - meta-soc-multimedia.yml
+    - meta-soc-railway.yml
+    - meta-soc-robotic.yml
+    - meta-soc-ros.yml
+    - meta-soc-security.yml
+    - meta-soc-smart-city.yml
+    - meta-soc-telecom.yml
+    - meta-soc-uav-drone.yml
 
 
 

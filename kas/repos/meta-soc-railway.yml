@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-railway:
+    url: https://github.com/soccentric/meta-soc-railway.git
+    path: sources/meta-soc-railway
+    branch: main

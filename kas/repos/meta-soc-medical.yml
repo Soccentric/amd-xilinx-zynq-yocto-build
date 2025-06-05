@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-medical:
+    url: https://github.com/soccentric/meta-soc-medical.git
+    path: sources/meta-soc-medical
+    branch: main

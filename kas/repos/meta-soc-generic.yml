@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-generic:
+    url: https://github.com/soccentric/meta-soc-generic.git
+    path: sources/meta-soc-generic
+    branch: main

@@ -1,0 +1,7 @@
+header:
+  version: 8
+repos:
+  meta-soc-telecom:
+    url: https://github.com/soccentric/meta-soc-telecom.git
+    path: sources/meta-soc-telecom
+    branch: main
